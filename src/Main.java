@@ -30,7 +30,7 @@ public class Main {
 		System.out.println("Please input your password (BEWARE: clear text):");
 		String password = scanner.nextLine();
 
-		final File outputFolder = new File("/Users/mathieu/emails");
+		final File outputFolder = new File(System.getProperty("user.home", "/tmp"), "emails");
 		FileUtils.forceMkdir(outputFolder);
 
 		try (ImapEmailSource source = ImapEmailSource
