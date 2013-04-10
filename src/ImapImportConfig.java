@@ -1,4 +1,7 @@
+import com.google.common.base.Function;
 import org.apache.commons.lang.StringUtils;
+
+import javax.mail.Folder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -12,6 +15,7 @@ public class ImapImportConfig {
 	private boolean importAttachments;
 	private boolean importContent;
 	private Provider provider;
+	private Function<Folder, Integer> guessStartingPoint;
 
 	public String getLogin() {
 		return login;
@@ -89,6 +93,14 @@ public class ImapImportConfig {
 
 	public void setProvider(Provider provider) {
 		this.provider = provider;
+	}
+
+	public Function<Folder, Integer> getGuessStartingPoint() {
+		return guessStartingPoint;
+	}
+
+	public void setGuessStartingPoint(Function<Folder, Integer> guessStartingPoint) {
+		this.guessStartingPoint = guessStartingPoint;
 	}
 
 	public interface Provider {

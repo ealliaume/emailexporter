@@ -1,3 +1,4 @@
+import com.google.common.base.Function;
 import com.google.common.collect.Sets;
 import com.sun.mail.imap.IMAPBodyPart;
 import org.apache.commons.codec.DecoderException;
@@ -6,6 +7,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
+import javax.mail.Folder;
 import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -28,15 +30,17 @@ public class Main {
 		System.out.println("Please input your password (BEWARE: clear text):");
 		String password = scanner.nextLine();
 
+		final File outputFolder = new File("/Users/mathieu/emails");
+		FileUtils.forceMkdir(outputFolder);
+
 		try (ImapEmailSource source = ImapEmailSource
 			.configure()
 			.withProvider(ImapImportConfig.Providers.GMAIL)
 			.withLogin(login)
 			.withPassword(password)
+			.withStartingPointFunction(getGuessStartingPoint(outputFolder))
 			.withImapFolder("INBOX").get()) {
 
-			File outputFolder = new File("/tmp/emails");
-			FileUtils.forceMkdir(outputFolder);
 
 			for (Message message : source) {
 				String folderName = message.getFolder().getName();
@@ -69,6 +73,29 @@ public class Main {
 				}
 			}
 		}
+	}
+
+	public static Function<String, Integer> getGuessStartingPoint(final File outputFolder) {
+		return new Function<String, Integer>() {
+			@Override
+			public Integer apply(String folder) {
+				int maxId = 1;
+				File existingMessages = new File(outputFolder, folder);
+				if (existingMessages.exists() && existingMessages.isDirectory()) {
+					System.out.println("Attempting restart from " +existingMessages);
+					for (String messageName : existingMessages.list()) {
+						if (StringUtils.startsWith(messageName, "message-")) {
+							int messageNumber = Integer.parseInt(messageName.substring("message-".length()));
+							if (messageNumber > maxId) {
+								maxId = messageNumber;
+							}
+						}
+					}
+				}
+				System.out.println("Restarting at "+maxId);
+				return maxId;
+			}
+		};
 	}
 
 	private static void extractPartData(File parentFolder, MimeMultipart multipart) throws MessagingException, IOException {
